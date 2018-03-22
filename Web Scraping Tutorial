@@ -1,0 +1,55 @@
+#This is a web scraping tutorial that I have been following as practice. I will share it here 
+
+#The purpose of this tutorial is to simply collect the information. I am currently working on how to clean an transform the information into a corpus
+
+#DATA 607 Project 3,practice
+#Tutorial can be found here
+#https://www.kdnuggets.com/2018/01/primer-web-scraping-r.html
+
+#Installing the web scraping package rvest
+install.packages("rvest")
+library(rvest)
+
+#lets pick a data science blog to scrape
+#http://varianceexplained.org/r/start-blog/
+
+#Specifying the url for desired website to be scrapped
+url <- 'http://varianceexplained.org/r/start-blog/'
+
+#Reading the HTML code from the website
+webpage <- read_html(url)
+
+#Know about the selector gadget (documentation)
+#vignette("selectorgadget")
+
+#content tag using the selector gadget 
+# .article-wrap
+
+#Using the CSS selector 
+info_html=html_nodes(webpage, '.article-wrap')   #taken from CSS selector
+
+#Converting the rating data to text
+info <- html_text(info_html)
+
+#Check the rating captured
+info
+
+#Using CSS selectors to scrap the post date
+post_date_html <- html_nodes(webpage,'.byline')
+
+#Converting the post date to text
+post_date <- html_text(post_date_html)
+
+#Verify the date captured
+post_date
+
+"Advice to aspiring data scientists: start a blog was published on November 14, 2017"
+
+#Using CSS selectors to scrap the title and title summary sections
+title_summary_html <- html_nodes(webpage,'h1 a')
+
+#Converting the title data to text
+title_summary <- html_text(title_summary_html)
+
+#Read the title summary of the article
+title_summary[1]
