@@ -78,9 +78,37 @@ insert into zip_skills (zip_skill_id, skill, count, percent)
 
 
 #--reddit edu tables 
-drop table if exists zip_edu; 
-create table zip_edu(zip_edu_id integer primary key, 
+drop table if exists reddit_edu; 
+create table reddit_edu(reddit_edu_id integer primary key, 
 education_level varchar(150) not null, 
 count integer, 
 percent decimal(18, 2));
 
+#--populate the reddit education table 
+insert into reddit_edu (reddit_edu_id, education_level, count, percent)
+	values(1, 'bachelor', 39, 0.31), 
+	(2, 'master', 83, 0.66), 
+	(3, 'phd', 46, 0.37);
+
+
+#--reddit skills table 
+drop table if exists reddit_skills;
+create table reddit_skills (reddit_skill_id integer primary key, 
+skill varchar(150), 
+count integer, 
+percent decimal(18, 2));
+
+#--populate skill table 
+#--populate reddit skills
+insert into reddit_skills (reddit_skill_id, skill, count, percent)
+	values(1, 'python', 80, 0.64), 
+	(2, 'sql', 49, 0.39), 
+	(3, 'nosql', 8, 0.06), 
+	(4, 'r', 75, 0.60), 
+	(5, 'spark', 27, 0.22), 
+	(7, 'sas', 14, 0.11), 
+	(8, 'excel', 29,0.23), 
+	(9, 'hive', 10, 0.08), 
+	(10, 'c', 19, 0.15), 
+	(11, 'java', 23, 0.18), 
+	(12, 'tableau', 19, 0.15);
