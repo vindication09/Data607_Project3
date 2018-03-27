@@ -1,0 +1,285 @@
+---
+title: "Improved TF-IDF calculation"
+author: "Group 5, DATA 607 Project 3"
+date: "March 27, 2018"
+output:
+  html_document: default
+  word_document: default
+---
+
+The three documents that compose our corpus can be found here:
+Indeed: https://raw.githubusercontent.com/vindication09/Data607_Project3/master/Indeed_Corpus.txt
+ZipRec: https://raw.githubusercontent.com/vindication09/Data607_Project3/master/ZipRecruiter_Corpus.txt
+Reddit: https://raw.githubusercontent.com/vindication09/Data607_Project3/master/Reddit_Corpus.txt
+
+This may solve the memory problem with the R markdown 
+library(ff)
+```{r , results='hide'}
+library(ff)
+```
+
+
+In order to reduce depending on large files, we will retireve the corpus from their respective online sources. 
+```{r}
+library(readr)
+library(stringr)
+
+indeed <- read_file("https://raw.githubusercontent.com/vindication09/Data607_Project3/master/Indeed_Corpus.txt")
+
+ziprec<-read_file("https://raw.githubusercontent.com/vindication09/Data607_Project3/master/ZipRecruiter_Corpus.txt")
+
+reddit<-read_file("https://raw.githubusercontent.com/vindication09/Data607_Project3/master/Reddit_Corpus.txt")
+
+```
+
+Lets clean out anything that is not an alphanumeric character
+```{r , results='hide'}
+str_replace_all(indeed, "[^[:alnum:]]", "")
+str_replace_all(ziprec, "[^[:alnum:]]", "")
+str_replace_all(reddit, "[^[:alnum:]]", "")
+```
+
+The special characters will cause an error. We need to remove them 
+```{r , results='hide'}
+indeed <- sapply(indeed,function(row) iconv(row, "latin1", "ASCII", sub=""))
+ziprec <- sapply(ziprec,function(row) iconv(row, "latin1", "ASCII", sub=""))
+reddit <- sapply(reddit,function(row) iconv(row, "latin1", "ASCII", sub=""))
+```
+
+
+We have our documents imported into our working directory, so we can bind them together 
+```{r}
+docs<-c(indeed, ziprec, reddit)
+```
+
+We need additional libraries 
+```{r}
+library(tm)
+library(ggplot2)
+library(stringr)
+```
+
+
+Define the corpus 
+```{r}
+corpus  <-Corpus(VectorSource(docs))
+```
+
+There should be 3 documents in our corpus. Lets check
+```{r}
+length(corpus)
+```
+
+Lets inspect documents
+```{r}
+corpus[[1]];corpus[[2]];corpus[[3]]
+```
+
+
+Lets convert to a docment term matrix 
+We need to process the data first 
+(Note: tolower was giving an encoding error)
+```{r}
+doc.corpus <- tm_map(corpus, tolower)
+doc.corpus <- tm_map(corpus, removePunctuation)
+doc.corpus <- tm_map(corpus, removeNumbers)
+doc.corpus <- tm_map(corpus, removeWords, stopwords("english"))
+
+```
+
+This next part removes endings such as "ing" or "s"
+```{r}
+library(SnowballC)
+doc.corpus <- tm_map(doc.corpus, stemDocument)
+```
+
+We should remove additional whitespace caused by all our transformations 
+```{r}
+doc.corpus <- tm_map(doc.corpus, stripWhitespace)
+```
+
+Now we create a term document matrix 
+```{r}
+tdm = TermDocumentMatrix(doc.corpus)
+```
+
+```{r}
+tdm
+```
+
+Lets inspect some elements in the index
+(Commented out due to large output)
+```{r}
+#inspect(tdm[1:3,1:3])
+```
+
+We can compute the transpose of this matrix 
+```{r}
+dtm <- DocumentTermMatrix(doc.corpus)
+```
+
+Inspect some elements in the transpose matrix 
+(commented out due to large output)
+```{r}
+#inspect(dtm[1:3,1:3])
+```
+
+There seems to be no indication that the transpose is better than the original so we will keep working off tdm
+
+Lets find the most frequent words
+```{r}
+findFreqTerms(tdm, 2000)
+```
+
+We can also do some word association. How do the words in this corpus associate with data?
+Lets set our correlation threshhold at 0.99
+```{r}
+findAssocs(tdm, "data", 0.99)
+```
+
+We can see there are sparse terms, meaning they don't occur often. Lets remove them 
+```{r}
+tdm.common = removeSparseTerms(tdm, 0.1)
+```
+
+```{r}
+#compare dimensions 
+dim(tdm);dim(tdm.common)
+```
+
+Lets inspect our reduced matrix 
+(commented out due to large output)
+```{r}
+#inspect(tdm.common[1:3,1:3])
+```
+
+Lets visualize the contents of our newly reduced matrix 
+```{r}
+library(slam)
+
+ tdm.dense <- as.matrix(tdm.common)
+
+ #tdm.dense
+
+
+```
+
+Convert the matrix to a tidy format
+```{r}
+library(reshape2)
+
+ tdm.dense = melt(tdm.dense, value.name = "count")
+  #head(tdm.dense)
+```
+
+We now have a long format data frame that can be stored in a relational database containing the information from our clean document term matrix.
+
+```{r}
+tdm.dense.df<-data.frame(tdm.dense)
+```
+
+Lets continue on with our investigation 
+What are the 50 most frequent terms in our clean matrix?
+```{r}
+freq=rowSums(as.matrix(tdm.common))
+head(freq,50)
+```
+
+How about the bottom?
+```{r}
+tail(freq,50)
+```
+
+Lets see if we can get a better story by performing tf-idf
+```{r}
+tdm_B = TermDocumentMatrix(doc.corpus,
+                         control = list(weighting = weightTfIdf,
+                                        stopwords = 'english', 
+                                        removePunctuation = T,
+                                        removeNumbers = T,
+                                        stemming = T))
+```
+
+
+```{r}
+tdm_B
+```
+
+Now lets inspect the frequencies based on tf-idf weighting 
+```{r}
+freq2=rowSums(as.matrix(tdm_B))
+head(freq2,10);tail(freq2,10)
+```
+
+
+Lets plot the frequencies 
+```{r}
+plot(sort(freq2, decreasing = T),col="blue",main="Word TF-IDF frequencies", xlab="TF-IDF-based rank", ylab = "TF-IDF")
+```
+
+The frequencies follow the expected pattern for tf-idf weighting .
+
+Lets plot the most frequent terms 
+```{r}
+high.freq=tail(sort(freq2),n=10)
+hfp.df=as.data.frame(sort(high.freq))
+hfp.df$names <- rownames(hfp.df) 
+
+ggplot(hfp.df, aes(reorder(names,high.freq), high.freq)) +
+  geom_bar(stat="identity") + coord_flip() + 
+  xlab("Terms") + ylab("Frequency") +
+  ggtitle("Term frequencies")
+```
+
+Based on tf-idf,we are not told a better story. We cannot conclude that tf-idf is a better algorithm to give us insight on what the top data science skills are. I can only speculate that this is due to the inverse relationship in tf-idf. Higher weight is assigned to terms that are "rare."
+The skills and education credentials are not "rare" words in our corpus since they are mentioned all the time. This would explain why they were assigned low tf-idf weights. 
+
+Lets compare this to the frequencies from our original document term matrix. 
+```{r}
+#use freq
+high.freq=tail(sort(freq),n=10)
+hfp.df=as.data.frame(sort(high.freq))
+hfp.df$names <- rownames(hfp.df) 
+
+ggplot(hfp.df, aes(reorder(names,high.freq), high.freq)) +
+  geom_bar(stat="identity") + coord_flip() + 
+  xlab("Terms") + ylab("Frequency") +
+  ggtitle("Term frequencies")
+```
+
+Lets put the information from the frequencies into an all inclusive word cloud 
+```{r}
+library(wordcloud)
+```
+
+
+```{r}
+wordcloud (tdm.dense.df$Terms, tdm.dense.df$count, random.order=FALSE, max.words=100, colors=brewer.pal(8, "Dark2"))
+```
+
+Used word matrix network and topic analysis to get more insights
+```{r}
+library(topicmodels)
+
+#word matrix network
+freq_terms <- findFreqTerms(tdm, 2000)   #set freq_terms
+plot(tdm, term = freq_terms, corThreshold = 0.1, weighting = T)  # find terms that have corr bigger or equal to 0.1.
+
+
+#topic analysis
+dtm <- as.DocumentTermMatrix(tdm)
+lda <- LDA(dtm, k = 10) # get 10 topics
+term <- terms(lda, 5) # get first 5 terms of every topic
+(term <- apply(term, MARGIN = 2, paste, collapse = ", "))
+```
+
+
+The plain counts of words tells a better story. We see words such as experience, team, and learn. We can infer that data scientist positions requires experience, working on a team, and learning. The word data is the top result. Perhaps data scientists should have a good understanding of the data they are working with. 
+The word cloud features words such as develop, programming, data, experience...etc, We also see some of the skills that popped up in the word clouds pertaining to each individual job search site. The inclusive word cloud based on the job descriptions appears to caputre the top soft skills that were not captured by the indivudal world clouds. We also include a topic analysis using LDA. Based on our combined efforts, we can conclude that some important soft skills are:
+management
+learning 
+experience 
+team work 
+understanding 
+
+
