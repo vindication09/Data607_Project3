@@ -200,6 +200,7 @@ library("tm")
 library("SnowballC")
 library("wordcloud")
 library("RColorBrewer")
+library(ggplot2)
 ```
 connect to mysql 
 ```{r, include=FALSE}
@@ -242,37 +243,37 @@ head(reddit_edu)
 Bar plots - Skills
 ```{r}
 # Indeed
-p <- ggplot(indeed_skill, aes(reorder(skill,-count), fill = skill, count)) + geom_bar(stat="identity") +
- labs(x = 'Language', y = 'Indeed - Frequency (%)', title = paste0('Language (%) for Data Scientist in the United States')) 
-p + scale_y_continuous(labels = scales::percent, breaks = seq(0,1,0.1))
+p <- ggplot(indeed_skill, aes(reorder(skill,-count),fill = skill,  count)) + geom_bar(stat="identity") +
+ labs(x = 'Language', y = 'Indeed - Frequency ', title = paste0('Language for Data Scientist in the United States')) 
+p #+ scale_y_continuous(labels = scales::percent, breaks = seq(0,1,0.1))
 
 # Zip Recruiter
 p <- ggplot(zip_skill, aes(reorder(skill,-count), fill = skill, count)) + geom_bar(stat="identity") +
- labs(x = 'Language', y = 'Zip Recruiter - Frequency (%)', title = paste0('Language (%) for Data Scientist in the United States')) 
-p + scale_y_continuous(labels = scales::percent, breaks = seq(0,1,0.1))
+ labs(x = 'Language', y = 'Zip Recruiter - Frequency ', title = paste0('Language for Data Scientist in the United States')) 
+p #+ scale_y_continuous(labels = scales::percent, breaks = seq(0,1,0.1))
 
 # Reddit
-p <- ggplot(reddit_skill, aes(reorder(skill,-count), fill = skill, count)) + geom_bar(stat="identity") +
- labs(x = 'Language', y = 'Reddit - Frequency (%)', title = paste0('Language (%) for Data Scientist in the United States')) 
-p + scale_y_continuous(labels = scales::percent, breaks = seq(0,1,0.1))
+p <- ggplot(reddit_skill, aes(reorder(skill,-count),fill = skill,  count)) + geom_bar(stat="identity") +
+ labs(x = 'Language', y = 'Reddit - Frequency ', title = paste0('Language for Data Scientist in the United States')) 
+p #+ scale_y_continuous(labels = scales::percent, breaks = seq(0,1,0.1))
 ```
 
 Bar plots - Education
 ```{r}
 # Indeed
 p <- ggplot(indeed_edu, aes(reorder(education,-count), fill = education, count)) + geom_bar(stat="identity") +
- labs(x = 'Language', y = 'Indeed - Frequency (%)', title = paste0('Education (%) for Data Scientist in the United States')) 
-p + scale_y_continuous(labels = scales::percent, breaks = seq(0,1,0.1))
+ labs(x = 'Language', y = 'Indeed - Frequency', title = paste0('Education for Data Scientist in the United States')) 
+p #+ scale_y_continuous(labels = scales::percent, breaks = seq(0,1,0.1))
 
 # Zip Recruiter
 p <- ggplot(zip_edu, aes(reorder(education,-count), fill = education, count)) + geom_bar(stat="identity") +
- labs(x = 'Language', y = 'Zip Recruiter - Frequency (%)', title = paste0('Education (%) for Data Scientist in the United States')) 
-p + scale_y_continuous(labels = scales::percent, breaks = seq(0,1,0.1))
+ labs(x = 'Language', y = 'Zip Recruiter - Frequency', title = paste0('Education for Data Scientist in the United States')) 
+p #+ scale_y_continuous(labels = scales::percent, breaks = seq(0,1,0.1))
 
 # Reddit
 p <- ggplot(reddit_edu, aes(reorder(education,-count), fill = education, count)) + geom_bar(stat="identity") +
- labs(x = 'Language', y = 'Reddit - Frequency (%)', title = paste0('Education (%) for Data Scientist in the United States')) 
-p + scale_y_continuous(labels = scales::percent, breaks = seq(0,1,0.1))
+ labs(x = 'Language', y = 'Reddit - Frequency', title = paste0('Education for Data Scientist in the United States')) 
+p #+ scale_y_continuous(labels = scales::percent, breaks = seq(0,1,0.1))
 ```
 
 Word clouds
@@ -333,4 +334,4 @@ We examined the education and skill requirements from indeed.com, ziprecruiter.c
 We can analyze these three documents and perform tf-idf to determine if additional inishgts regarding the most in demand data skills can be obtained. 
 
 That portion of the anaysis can be found here 
-http://rpubs.com/ejd01/374188
+http://rpubs.com/ejd01/374331
